@@ -1,5 +1,16 @@
 import 'package:flutter/material.dart';
 
+// 各ページで押したカウンターを保持する方法
+// 1. グローバル変数?(Dartでの呼び方を確認)でマップ<String, int>で保持する
+// 2. provider パッケージを使う?
+
+Map<String, int> _counters = {
+  'Initial page': 0,
+  'page A': 0,
+  'page B': 0,
+  'page C': 0,
+};
+
 void main() {
   runApp(MaterialApp(
     initialRoute: '/',
@@ -27,45 +38,64 @@ class _MyPageState extends State<MyPage> {
   void _incrementCounter() {
     setState(() {
       _counter++;
+      _counters[widget.title]++;
     });
   }
 
-  Widget NaviButton(String title, String routeName) {
-    return RaisedButton(
+  Widget naviButton(String title, String routeName) {
+    return ElevatedButton(
         child: Text(title),
         onPressed: () {
           if (title == 'Initial page') {
             // Inital Pageが押されたときは、それまで積み上がっていたPageをすべて取り出す
             Navigator.popUntil(context, ModalRoute.withName('/'));
           } else {
-            Navigator.pushNamed(context, routeName);
+            try {
+              Navigator.pushNamed(context, routeName);
+            } catch (e) {
+              final SnackBar snackBar = SnackBar(
+                content: Text("${title}が見つかりません"),
+                duration: Duration(seconds: 3),
+              );
+              try {
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              } catch (e) {
+                print(e.toString());
+              }
+            }
           }
         });
   }
 
   @override
+  void initState() {
+    super.initState();
+    _counter = _counters[widget.title];
+  }
+
+  @override
   Widget build(BuildContext context) {
-    List<Widget> _buttons = List<Widget>();
+    List<Widget> _buttons = List<Widget>.filled(0, null, growable: true);
     switch (widget.title) {
       case 'Initial page':
-        _buttons.add(NaviButton('page A', '/a'));
-        _buttons.add(NaviButton('page B', '/b'));
-        _buttons.add(NaviButton('page C', '/c'));
+        _buttons.add(naviButton('page A', '/a'));
+        _buttons.add(naviButton('page B', '/b'));
+        _buttons.add(naviButton('page C', '/c'));
         break;
       case 'page A':
-        _buttons.add(NaviButton('Initial page', '/'));
-        _buttons.add(NaviButton('page B', '/b'));
-        _buttons.add(NaviButton('page C', '/c'));
+        _buttons.add(naviButton('Initial page', '/'));
+        _buttons.add(naviButton('page B', '/b'));
+        _buttons.add(naviButton('page C', '/c'));
         break;
       case 'page B':
-        _buttons.add(NaviButton('Initial page', '/'));
-        _buttons.add(NaviButton('page A', '/a'));
-        _buttons.add(NaviButton('page C', '/c'));
+        _buttons.add(naviButton('Initial page', '/'));
+        _buttons.add(naviButton('page A', '/a'));
+        _buttons.add(naviButton('page C', '/c'));
         break;
       case 'page C':
-        _buttons.add(NaviButton('Initial page', '/'));
-        _buttons.add(NaviButton('page A', '/a'));
-        _buttons.add(NaviButton('page B', '/B'));
+        _buttons.add(naviButton('Initial page', '/'));
+        _buttons.add(naviButton('page A', '/a'));
+        _buttons.add(naviButton('page B', '/B'));
         break;
     }
 
